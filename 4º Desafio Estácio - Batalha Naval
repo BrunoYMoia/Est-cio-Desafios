@@ -1,0 +1,116 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define TAM 10
+#define NAVIO 3
+#define HABILIDADE 5
+#define TAM_HABIL 5  // Tamanho das matrizes de habilidade (5x5)
+
+void inicializarTabuleiro(int tabuleiro[TAM][TAM]) {
+    for (int i = 0; i < TAM; i++)
+        for (int j = 0; j < TAM; j++)
+            tabuleiro[i][j] = 0;
+}
+
+void imprimirTabuleiro(int tabuleiro[TAM][TAM]) {
+    printf("\n=== Tabuleiro ===\n\n");
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            if (tabuleiro[i][j] == 0) printf("~ ");         // Água
+            else if (tabuleiro[i][j] == NAVIO) printf("N "); // Navio
+            else if (tabuleiro[i][j] == HABILIDADE) printf("* "); // Habilidade
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+// Posiciona navios fixos como no nível anterior
+void posicionarNavios(int tabuleiro[TAM][TAM]) {
+    // Horizontal
+    for (int i = 0; i < NAVIO; i++) tabuleiro[1][i] = NAVIO;
+    // Vertical
+    for (int i = 0; i < NAVIO; i++) tabuleiro[4 + i][3] = NAVIO;
+    // Diagonal principal
+    for (int i = 0; i < NAVIO; i++) tabuleiro[i][i] = NAVIO;
+    // Diagonal secundária
+    for (int i = 0; i < NAVIO; i++) tabuleiro[7 + i][9 - i] = NAVIO;
+}
+
+// Cria matriz cone (triângulo para baixo com vértice no topo)
+void criarCone(int matriz[TAM_HABIL][TAM_HABIL]) {
+    for (int i = 0; i < TAM_HABIL; i++) {
+        for (int j = 0; j < TAM_HABIL; j++) {
+            if (j >= (TAM_HABIL / 2 - i) && j <= (TAM_HABIL / 2 + i))
+                matriz[i][j] = 1;
+            else
+                matriz[i][j] = 0;
+        }
+    }
+}
+
+// Cria matriz cruz com vértices verticais e horizontais
+void criarCruz(int matriz[TAM_HABIL][TAM_HABIL]) {
+    for (int i = 0; i < TAM_HABIL; i++) {
+        for (int j = 0; j < TAM_HABIL; j++) {
+            if (i == TAM_HABIL / 2 || j == TAM_HABIL / 2)
+                matriz[i][j] = 1;
+            else
+                matriz[i][j] = 0;
+        }
+    }
+}
+
+// Cria matriz octaedro (losango com centro no meio)
+void criarOctaedro(int matriz[TAM_HABIL][TAM_HABIL]) {
+    for (int i = 0; i < TAM_HABIL; i++) {
+        for (int j = 0; j < TAM_HABIL; j++) {
+            if (abs(i - TAM_HABIL / 2) + abs(j - TAM_HABIL / 2) <= TAM_HABIL / 2)
+                matriz[i][j] = 1;
+            else
+                matriz[i][j] = 0;
+        }
+    }
+}
+
+// Aplica matriz de habilidade no tabuleiro, centrando em (linha, coluna)
+void aplicarHabilidade(int tabuleiro[TAM][TAM], int matriz[TAM_HABIL][TAM_HABIL], int linha, int coluna) {
+    int offset = TAM_HABIL / 2;
+
+    for (int i = 0; i < TAM_HABIL; i++) {
+        for (int j = 0; j < TAM_HABIL; j++) {
+            int lin = linha - offset + i;
+            int col = coluna - offset + j;
+
+            // Verifica se está dentro do tabuleiro
+            if (lin >= 0 && lin < TAM && col >= 0 && col < TAM) {
+                if (matriz[i][j] == 1 && tabuleiro[lin][col] == 0) {
+                    tabuleiro[lin][col] = HABILIDADE;
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    int tabuleiro[TAM][TAM];
+    int cone[TAM_HABIL][TAM_HABIL], cruz[TAM_HABIL][TAM_HABIL], octaedro[TAM_HABIL][TAM_HABIL];
+
+    inicializarTabuleiro(tabuleiro);
+    posicionarNavios(tabuleiro);
+
+    // Criar habilidades
+    criarCone(cone);
+    criarCruz(cruz);
+    criarOctaedro(octaedro);
+
+    // Aplicar habilidades com ponto de origem no tabuleiro
+    aplicarHabilidade(tabuleiro, cone, 2, 5);       // Cone com centro em (2,5)
+    aplicarHabilidade(tabuleiro, cruz, 5, 5);       // Cruz com centro em (5,5)
+    aplicarHabilidade(tabuleiro, octaedro, 7, 2);   // Octaedro com centro em (7,2)
+
+    // Exibir resultado
+    imprimirTabuleiro(tabuleiro);
+
+    return 0;
+}
